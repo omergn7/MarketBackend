@@ -4,6 +4,7 @@ import com.example.marketfiyat.DTO.UrunDetayDto;
 import com.example.marketfiyat.Model.*;
 import com.example.marketfiyat.Repository.BarkodRepository;
 import com.example.marketfiyat.Repository.MarketUrunRepository;
+import com.example.marketfiyat.Repository.UrunRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,9 @@ public class UrunController {
 
     @Autowired
     private BarkodRepository barkodRepository;
+
+    @Autowired
+    private UrunRepository urunRepository; // ✅ Arama için eklendi
 
     // ✅ 1. Ürün detayları
     @GetMapping("/detay/{barkodId}")
@@ -91,10 +95,7 @@ public class UrunController {
 
         karsilastirma.sort(Comparator.comparingDouble(o -> (Double) o.get("fiyat")));
 
-        // ✅ Ülke bilgisi çekiliyor
         String ulkeAdi = urun.getUlke() != null ? urun.getUlke().getUlkeAdi() : "Bilinmiyor";
-
-        // ✅ İstersen ülkeye göre bayrak URL’si ekleyebilirsin (örn. Türkiye için 🇹🇷)
         String bayrakEmoji = getBayrakEmoji(ulkeAdi);
 
         Map<String, Object> dto = new LinkedHashMap<>();
@@ -102,19 +103,17 @@ public class UrunController {
         dto.put("urunGorsel", urun.getUrunGorsel());
         dto.put("barkod", barkod);
         dto.put("ulke", ulkeAdi);
-        dto.put("bayrak", bayrakEmoji);  // opsiyonel
+        dto.put("bayrak", bayrakEmoji);
         dto.put("karsilastirma", karsilastirma);
 
         return ResponseEntity.ok(dto);
     }
+
     public String getBayrakEmoji(String ulkeAdi) {
         System.out.println("🔎 GİRİLEN ülkeAdi: '" + ulkeAdi + "'");
-
-        // Unicode normalize + lower + aksan/nokta temizle
         ulkeAdi = Normalizer.normalize(ulkeAdi, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "") // nokta, şapka vs siler
+                .replaceAll("\\p{M}", "")
                 .toLowerCase(Locale.ROOT);
-
         System.out.println("🔎 TEMİZLENMİŞ ülkeAdi: '" + ulkeAdi + "'");
 
         if (ulkeAdi.contains("turkiye")) return "🇹🇷";
@@ -123,10 +122,24 @@ public class UrunController {
         if (ulkeAdi.contains("fransa")) return "🇫🇷";
         if (ulkeAdi.contains("cin")) return "🇨🇳";
         if (ulkeAdi.contains("italya")) return "🇮🇹";
-
         return "🏳️";
     }
 
+    // ✅ 3. Ürün arama endpoint'i
+    @GetMapping("/search")
+    public ResponseEntity<List<Map<String, Object>>> searchUrun(@RequestParam String query) {
+        List<Urun> result = urunRepository.findByUrunNameContainingIgnoreCase(query);
+
+        List<Map<String, Object>> simpleList = result.stream().map(urun -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", urun.getUrunId());
+            map.put("name", urun.getUrunName());
+            map.put("urunGorsel", urun.getUrunGorsel()); // 🟢 Burası önemli!
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(simpleList);
+    }
 
 
 

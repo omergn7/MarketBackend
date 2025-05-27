@@ -1,5 +1,6 @@
 package com.example.marketfiyat.Model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -16,13 +17,11 @@ public class Kullanici {
     @Column(name = "toplam_tasarruf")
     private Double toplamTasarruf = 0.0;
 
-    @Column(name = "aylik_tasarruf")
-    private Double aylikTasarruf = 0.0;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer kullaniciId;
 
+    @JsonProperty("kullanici_id")
     public Integer getKullaniciId() {
         return kullaniciId;
     }
@@ -74,9 +73,6 @@ public class Kullanici {
 
     public Double getToplamTasarruf() { return toplamTasarruf; }
     public void setToplamTasarruf(Double toplamTasarruf) { this.toplamTasarruf = toplamTasarruf; }
-
-    public Double getAylikTasarruf() { return aylikTasarruf; }
-    public void setAylikTasarruf(Double aylikTasarruf) { this.aylikTasarruf = aylikTasarruf; }
 
 
 
