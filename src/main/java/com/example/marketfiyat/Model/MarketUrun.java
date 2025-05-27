@@ -1,5 +1,6 @@
 package com.example.marketfiyat.Model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.util.Date;
 
@@ -14,6 +15,7 @@ public class MarketUrun {
 
     @ManyToOne
     @JoinColumn(name = "market_id")
+    @JsonBackReference
     private Market market;
 
     @ManyToOne

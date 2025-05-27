@@ -90,9 +90,14 @@ public class UrunController {
             item.put("market", fiyat.getMarket().getMarketName());
             item.put("fiyat", fiyat.getFiyat());
             item.put("barkodId", fiyat.getBarkod().getBarkodId());
+
+            // ✅ Market görseli eklendi
+            item.put("marketGorsel", fiyat.getMarket().getMarketGorsel());
+
             karsilastirma.add(item);
         }
 
+        // Fiyata göre artan sıralama
         karsilastirma.sort(Comparator.comparingDouble(o -> (Double) o.get("fiyat")));
 
         String ulkeAdi = urun.getUlke() != null ? urun.getUlke().getUlkeAdi() : "Bilinmiyor";
@@ -108,6 +113,7 @@ public class UrunController {
 
         return ResponseEntity.ok(dto);
     }
+
 
     public String getBayrakEmoji(String ulkeAdi) {
         System.out.println("🔎 GİRİLEN ülkeAdi: '" + ulkeAdi + "'");
