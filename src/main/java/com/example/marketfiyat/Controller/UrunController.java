@@ -60,27 +60,36 @@ public class UrunController {
         }
     }
 
-    // ✅ 2. Barkodla karşılaştırma yapan endpoint
     @GetMapping("/karsilastir")
     public ResponseEntity<?> karsilastirBarkoddan(@RequestParam("barkod") String rawKod) {
-        Pattern pattern = Pattern.compile("\\b\\d{8}\\b");
+        Pattern pattern = Pattern.compile("\\b\\d{8,14}\\b");
         Matcher matcher = pattern.matcher(rawKod);
 
         if (!matcher.find()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Geçerli 8 haneli barkod bulunamadı."));
+            return ResponseEntity.badRequest().body(Map.of("error", "Geçerli barkod bulunamadı."));
         }
+
 
         String barkod = matcher.group();
         System.out.println("🎯 Gelen Barkod: " + barkod);
 
+        Urun urun = null;
         Optional<Barkod> barkodOpt = barkodRepository.findFirstByBarkod(barkod);
-        if (barkodOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Ürün bulunamadı", "barkod", barkod));
-        }
 
-        Barkod anaBarkod = barkodOpt.get();
-        Urun urun = anaBarkod.getUrun();
-        System.out.println("🎯 Barkodla eşleşen ürün ID: " + urun.getUrunId());
+        if (barkodOpt.isPresent()) {
+            Barkod anaBarkod = barkodOpt.get();
+            urun = anaBarkod.getUrun();
+            System.out.println("🎯 Barkodla eşleşen ürün ID: " + urun.getUrunId());
+        } else {
+            // ✅ Eklenen kısım: ürün_no üzerinden eşleşme kontrolü
+            Optional<Urun> urunOpt = urunRepository.findByUrunNo(barkod);
+            if (urunOpt.isPresent()) {
+                urun = urunOpt.get();
+                System.out.println("🎯 urun_no ile eşleşen ürün ID: " + urun.getUrunId());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Ürün bulunamadı", "barkod", barkod));
+            }
+        }
 
         List<MarketUrun> fiyatlar = marketUrunRepository.findLatestFiyatlarByUrunId(urun.getUrunId());
 
@@ -90,15 +99,12 @@ public class UrunController {
             item.put("market", fiyat.getMarket().getMarketName());
             item.put("fiyat", fiyat.getFiyat());
             item.put("barkodId", fiyat.getBarkod().getBarkodId());
-
-            // ✅ Market görseli eklendi
             item.put("marketGorsel", fiyat.getMarket().getMarketGorsel());
-
             karsilastirma.add(item);
         }
 
-        // Fiyata göre artan sıralama
         karsilastirma.sort(Comparator.comparingDouble(o -> (Double) o.get("fiyat")));
+        System.out.println("📦 Dönüşe eklenen fiyat adedi: " + karsilastirma.size());
 
         String ulkeAdi = urun.getUlke() != null ? urun.getUlke().getUlkeAdi() : "Bilinmiyor";
         String bayrakEmoji = getBayrakEmoji(ulkeAdi);

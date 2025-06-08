@@ -13,5 +13,6 @@ public interface UrunRepository extends JpaRepository<Urun, Integer> {
     // Besin değerleriyle birlikte bir ürünü eager fetch ile çek
     @Query("SELECT u FROM Urun u LEFT JOIN FETCH u.besinDegeri WHERE u.urunId = :urunId")
     Optional<Urun> findByUrunIdWithBesinDegeri(@Param("urunId") Integer urunId);
+    Optional<Urun> findByUrunNo(String urunNo);
 
 }

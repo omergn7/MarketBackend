@@ -3,6 +3,7 @@ package com.example.marketfiyat.Model;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -24,6 +25,8 @@ public class Urun {
     @JoinColumn(name = "ulke_id")
     private Ulke ulke;
 
+    @Column(name = "urun_no", unique = true)
+    private String urunNo;
 
     @OneToOne(mappedBy = "urun", fetch = FetchType.EAGER)
     private BesinDegeri besinDegeri;
@@ -32,6 +35,26 @@ public class Urun {
 
     @OneToMany(mappedBy = "urun", cascade = CascadeType.ALL)
     private List<Barkod> barkodlar;
+
+    public String getUrunNo() {
+        return urunNo;
+    }
+
+    public void setUrunNo(String urunNo) {
+        this.urunNo = urunNo;
+    }
+
+    @ManyToMany
+    @JoinTable(
+            name = "urun_alerjen",
+            joinColumns = @JoinColumn(name = "urun_id"),
+            inverseJoinColumns = @JoinColumn(name = "alerjen_id")
+    )
+    private Set<Alerjen> alerjenler;
+
+    public Set<Alerjen> getAlerjenler() {
+        return alerjenler;
+    }
 
     public int getUrunId() {
         return urunId;
